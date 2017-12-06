@@ -1,4 +1,6 @@
-#I bought 2 ETH on Dec/4/2017 in the CSI Library. I wrote this script to keep me, and my father notified of the price. Losing the money is possiblity but if we do, we do. It's an experince.
+# I bought 2 ETH on Dec/4/2017 in the CSI Library.
+# I wrote this script to keep me, and my father notified of the price.
+#  Losing the money is possibility but if we do, we do. It's an experience.
 
 
 import requests
@@ -8,7 +10,7 @@ from credentials import account_sid, auth_token, my_cell, my_twilio
 
 client = Client(account_sid, auth_token)
 
-def send_message(numbers, message): # Pass number as Array to add verified numbers
+def send_message(numbers, message):  # Pass number as Array to add verified numbers
     for number in numbers:
         print('Sent to {}'.format(number))
         client.messages.create(to=number, from_=my_twilio, body=message)
@@ -24,30 +26,43 @@ def get_start_data(e): #This function will take time to build on. This is due to
     }
 
 def main():
+    refresh_amount = 0
+
     eth = get_ethereum()
     start_data = get_start_data(eth)
-    send_message([my_cell], ' Good Morning. The price of Ethereum is valued at ' + eth['amount']
-                 + 'We purchased ETH at $' + str(start_data['start_price']) + '. '
-                 + ' Our Cumulative Percentage is currently at ' + str(start_data['cumulative_percentage']) + '%'
-                 + ' Our Cumulative Value gained is currently at $' + str(start_data['cumulative_change']))
-    seconds = 1
-    minutes = 1  # The values need to start at one. In order for the. The timer to work properly do not change!
-    hours = 1
+
+    minutes = 0  # The values need to start at one. In order for the. The timer to work properly do not change!
+    hours = 0
+    half_hour_time = 1800 # Time converted to seconds.
+
+    send_message([my_cell], 'Value of ETH is $' + eth['amount'])
     print("Value of ETH is $" + eth['amount'])
+    print("Our Cumlative Percentage is Currently is  %{}".format(start_data['cumulative_percentage']))
+    print("Our Cumlative Price Change is Currently ${}".format(start_data['cumulative_change']))
     while True:
-        eth = get_ethereum()
-        time.sleep(60)
-        if minutes % 60 is 0:
-            hours += 1
-        if minutes % 360 is 0:
-            send_message([my_cell], 'Hello, it has been 6 hours since the last update. '
-                                    + 'ETH is currently valued at {}'.format(eth['amount']))
+        time.sleep(half_hour_time)
+        eth = get_ethereum() # Returns information about our ethereum price.
+        data = get_start_data(eth)
+        print('Slept for a half an hour, Moving on.')
+        if refresh_amount is 0:
+            minutes += 30
+            hours += 0.5
         if hours % 24 is 0:
             send_message([my_cell], ' Good Morning. The price of Ethereum is valued at ' + eth['amount']
-                         + ' We purchased ETH at $' + str(start_data['start_price']) + '. '
-                         + ' Our Cumulative Percentage is currently at %' + str(start_data['cumulative_percentage']) + '%'
+                         + 'We purchased ETH at $' + str(start_data['start_price']) + '. '
+                         + ' Our Cumulative Percentage is currently at ' + str(start_data['cumulative_percentage']) + '%'
                          + ' Our Cumulative Value gained is currently at $' + str(start_data['cumulative_change']))
 
+        if minutes % 360 is 0:  # Just want to send a message to show what the price update is.
+            send_message([my_cell], 'Hello, it has been 6 hours since the last update. '
+                                    + 'ETH is currently valued at {}'.format(eth['amount']))
+        if data['cumulative_percentage'] <= -15:
+            send_message([my_cell],'Warning, price Cumulative % dropped below 15%.'
+                                   ' ETH Price is currently at $ {}').format(eth['amount'])
 
 if __name__ == '__main__':
    main()
+
+
+
+# Issues Arise with fetching the Ethereum price. I will fetch for a price every 3 minutes
